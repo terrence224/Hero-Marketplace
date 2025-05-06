@@ -143,7 +143,7 @@ def view_listings():
 @login_required
 def create_listing():
     if request.method == 'GET':
-        return render_template('create_listing.html', user=session.get('user', {}))
+        return render_template('home.html', user=session.get('user', {}))
     
     if request.method == 'POST':
         try:
@@ -152,7 +152,7 @@ def create_listing():
             
             if not user_email:
                 flash("You must be logged in to create a listing")
-                return redirect(url_for('login'))
+                return redirect(url_for('view_listings'))
             
             # Extract form data
             title = request.form.get('title')
@@ -165,7 +165,7 @@ def create_listing():
             # Validate required fields
             if not all([title, description, price, contact, category]):
                 flash("All fields are required")
-                return render_template('create_listing.html', user=session.get('user', {}))
+                return redirect(url_for('view_listings'))
             
             # Insert into Supabase
             listing_data = {
@@ -182,15 +182,15 @@ def create_listing():
             
             if response.data:
                 flash("Listing created successfully!")
-                return redirect(url_for('view_listings'))
             else:
                 flash("Failed to create listing")
-                return render_template('create_listing.html', user=session.get('user', {}))
+                
+            return redirect(url_for('view_listings'))
                 
         except Exception as e:
             print(f"Error creating listing: {e}")
             flash("An error occurred while creating your listing")
-            return render_template('create_listing.html', user=session.get('user', {}))
+            return redirect(url_for('view_listings'))
 
 @app.route('/listings/<int:listing_id>')
 def view_listing(listing_id):
@@ -199,7 +199,7 @@ def view_listing(listing_id):
         
         if response.data and len(response.data) > 0:
             listing = response.data[0]
-            return render_template('listing_detail.html', listing=listing, user=session.get('user', {}))
+            return render_template('home.html', listing_detail=listing, user=session.get('user', {}))
         else:
             flash("Listing not found")
             return redirect(url_for('view_listings'))
@@ -208,7 +208,7 @@ def view_listing(listing_id):
         flash("Failed to load listing details")
         return redirect(url_for('view_listings'))
 
-@app.route('/listings/<int:listing_id>/edit', methods=['GET', 'POST'])
+@app.route('/listings/<int:listing_id>/edit', methods=['POST'])
 @login_required
 def edit_listing(listing_id):
     # Get current user's email
@@ -216,7 +216,7 @@ def edit_listing(listing_id):
     
     if not user_email:
         flash("You must be logged in to edit a listing")
-        return redirect(url_for('login'))
+        return redirect(url_for('view_listings'))
     
     try:
         # Get the listing
@@ -233,41 +233,37 @@ def edit_listing(listing_id):
             flash("You don't have permission to edit this listing")
             return redirect(url_for('view_listings'))
         
-        if request.method == 'GET':
-            return render_template('edit_listing.html', listing=listing, user=session.get('user', {}))
+        # Extract form data
+        title = request.form.get('title')
+        description = request.form.get('description')
+        price = request.form.get('price')
+        status = request.form.get('status')
+        contact = request.form.get('contact')
+        category = request.form.get('category')
         
-        if request.method == 'POST':
-            # Extract form data
-            title = request.form.get('title')
-            description = request.form.get('description')
-            price = request.form.get('price')
-            status = request.form.get('status')
-            contact = request.form.get('contact')
-            category = request.form.get('category')
+        # Validate required fields
+        if not all([title, description, price, contact, category, status]):
+            flash("All fields are required")
+            return redirect(url_for('view_listings'))
+        
+        # Update in Supabase
+        listing_data = {
+            'title': title,
+            'description': description,
+            'price': float(price),
+            'status': status,
+            'contact': contact,
+            'category': category
+        }
+        
+        update_response = supabase.table('listings').update(listing_data).eq('id', listing_id).execute()
+        
+        if update_response.data:
+            flash("Listing updated successfully!")
+        else:
+            flash("Failed to update listing")
             
-            # Validate required fields
-            if not all([title, description, price, contact, category, status]):
-                flash("All fields are required")
-                return render_template('edit_listing.html', listing=listing, user=session.get('user', {}))
-            
-            # Update in Supabase
-            listing_data = {
-                'title': title,
-                'description': description,
-                'price': float(price),
-                'status': status,
-                'contact': contact,
-                'category': category
-            }
-            
-            update_response = supabase.table('listings').update(listing_data).eq('id', listing_id).execute()
-            
-            if update_response.data:
-                flash("Listing updated successfully!")
-                return redirect(url_for('view_listing', listing_id=listing_id))
-            else:
-                flash("Failed to update listing")
-                return render_template('edit_listing.html', listing=listing, user=session.get('user', {}))
+        return redirect(url_for('view_listings'))
                 
     except Exception as e:
         print(f"Error updating listing: {e}")
@@ -282,7 +278,7 @@ def delete_listing(listing_id):
     
     if not user_email:
         flash("You must be logged in to delete a listing")
-        return redirect(url_for('login'))
+        return redirect(url_for('view_listings'))
     
     try:
         # Get the listing
@@ -323,20 +319,16 @@ def my_listings():
         
         if not user_email:
             flash("You must be logged in to view your listings")
-            return redirect(url_for('login'))
+            return redirect(url_for('view_listings'))
         
         # Query Supabase for user's listings
         response = supabase.table('listings').select('*').eq('gmail', user_email).execute()
         listings = response.data
         
-        return render_template('my_listings.html', listings=listings, user=session.get('user', {}))
+        return render_template('home.html', listings=listings, user=session.get('user', {}), view_type='my_listings')
     except Exception as e:
         print(f"Error fetching user listings: {e}")
-        return render_template('my_listings.html', listings=[], error="Failed to load your listings", user=session.get('user', {}))
-
-
-
-
+        return render_template('home.html', listings=[], error="Failed to load your listings", user=session.get('user', {}))
 
 
 if __name__ == "__main__":
