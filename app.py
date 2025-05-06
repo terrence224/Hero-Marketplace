@@ -36,8 +36,7 @@ google = oauth.register(
 
 # Admin whitelist (list of email addresses that have admin privileges)
 ADMIN_EMAILS = [
-    "admin@example.com",
-    "youradmin@gmail.com",
+    "gionterrence.pozon@my.jru.edu",
     # Add more admin emails as needed
 ]
 
@@ -86,10 +85,10 @@ def authorize():
         
         if email in ADMIN_EMAILS:
             session['user_type'] = 'admin'
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('view_listings'))
         else:
             session['user_type'] = 'user'
-            return redirect(url_for('user_dashboard'))
+            return redirect(url_for('view_listings'))
             
     except Exception as e:
         print(f"Error during authorization: {e}")
@@ -100,22 +99,6 @@ def logout():
     session.pop('user', None)
     session.pop('user_type', None)
     return redirect(url_for('login'))
-
-@app.route('/user-dashboard')
-@login_required
-def user_dashboard():
-    if session.get('user_type') != 'user':
-        return redirect(url_for('index'))
-    user = session.get('user', {})
-    return render_template('home.html', user=user)
-
-@app.route('/admin-dashboard')
-@login_required
-def admin_dashboard():
-    if session.get('user_type') != 'admin':
-        return redirect(url_for('index'))
-    user = session.get('user', {})
-    return render_template('admin.html', user=user)
 
 
 @app.route('/listings')
