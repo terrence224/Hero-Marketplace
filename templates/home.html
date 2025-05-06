@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JRU Marketplace</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,500,600&display=swap" rel="stylesheet">
+  <!-- Link to your static CSS file -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+    
+    /* Header */
+    header {
+      background: #2c3e50;
+      color: #fff;
+      padding: 1rem;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-content h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+    .user-info .profile-pic {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+    
+    /* Layout */
+    .content-wrapper {
+      display: flex;
+      max-width: 1200px;
+      margin: 1rem auto;
+    }
+    nav {
+      width: 200px;
+      background: #ecf0f1;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-right: 1rem;
+      height: fit-content;
+    }
+    nav ul {
+      list-style: none;
+    }
+    nav li {
+      margin: 0.5rem 0;
+    }
+    nav a {
+      color: #2c3e50;
+      text-decoration: none;
+      display: block;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+    }
+    nav a:hover {
+      background: #bdc3c7;
+    }
+    .category-heading {
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    .divider {
+      border-top: 1px solid #bdc3c7;
+      margin: 0.7rem 0;
+    }
+    
+    main {
+      flex: 1;
+    }
+    
+    /* Listings */
+    .listings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .post-btn {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .post-btn:hover {
+      background: #2980b9;
+    }
+    
+    .listings {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    .listing {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .status-badge.available { background: #27ae60; }
+    .status-badge.sold { background: #c0392b; }
+    .status-badge.negotiating { background: #f39c12; }
+    
+    .listing-details {
+      padding: 0.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .listing-details h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.3rem;
+    }
+    .price {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .description, .category {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+    .listing-actions {
+      margin-top: auto;
+    }
+    .listing-actions button {
+      background: #ecf0f1;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      margin-right: 0.3rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .view-btn { background: #3498db; color: #fff; }
+    .edit-btn { background: #f1c40f; color: #fff; }
+    .delete-btn { background: #e74c3c; color: #fff; }
+    .listing-actions button:hover {
+      opacity: 0.9;
+    }
+    
+    /* Flash & no listings */
+    .flash-messages {
+      margin-bottom: 1rem;
+    }
+    .flash-message {
+      background: #2ecc71;
+      color: #fff;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    .no-listings {
+      text-align: center;
+      padding: 2rem;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    
+    /* Modals - Improved */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      margin: 20px auto;
+    }
+    .modal-content .close {
+      position: absolute;
+      top: 12px; right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #777;
+      transition: color 0.2s;
+    }
+    .modal-content .close:hover {
+      color: #333;
+    }
+    .modal-content h2 {
+      margin-bottom: 1rem;
+      color: #2c3e50;
+      font-size: 1.4rem;
+    }
+    
+    /* Form styling */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      color: #555;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .form-actions {
+      text-align: right;
+      margin-top: 1rem;
+    }
+    .form-actions button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .form-actions button[type="button"] {
+      background: #95a5a6;
+      color: #fff;
+    }
+    .form-actions button[type="submit"] {
+      background: #3498db;
+      color: #fff;
+      margin-left: 0.8rem;
+    }
+    .form-actions button:hover {
+      opacity: 0.9;
+    }
+    
+    /* View Listing Detail Modal */
+    .listing-detail-modal {
+      max-width: 800px;
+    }
+    .listing-detail-content {
+      display: flex;
+      flex-direction: column;
+    }
+    @media (min-width: 768px) {
+      .listing-detail-content {
+        flex-direction: row;
+        gap: 1.5rem;
+      }
+    }
+    .listing-image-large {
+      position: relative;
+      flex: 1;
+      max-width: 100%;
+    }
+    @media (min-width: 768px) {
+      .listing-image-large {
+        max-width: 50%;
+      }
+    }
+    .listing-image-large img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .listing-info {
+      flex: 1;
+      padding-top: 1rem;
+    }
+    @media (min-width: 768px) {
+      .listing-info {
+        padding-top: 0;
+      }
+    }
+    .description-box {
+      background: #f8f9fa;
+      padding: 0.8rem;
+      border-radius: 4px;
+      margin: 0.5rem 0 1rem;
+      min-height: 80px;
+      white-space: pre-line;
+    }
+    .detail-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .contact-btn {
+      background: #27ae60;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .contact-btn:hover {
+      background: #219653;
+    }
+    #editDeleteBtns {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    /* Delete Modal */
+    .delete-modal {
+      max-width: 400px;
+    }
+    .delete-modal p {
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <h1>A Dignified Marketplace for the JRU Community</h1>
+      {% if user %}
+        <div class="user-info">
+          <img src="{{ user.picture }}" alt="Profile" class="profile-pic">
+          <span>Welcome, {{ user.name }}</span>
+        </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Sidebar Navigation -->
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="#" onclick="showAllListings()">All Listings</a></li>
+        <li><a href="#" onclick="showMyListings()">My Listings</a></li>
+        <li><a href="#" onclick="clearForm(); openModal()">Post an Item</a></li>
+        <li class="category-heading">Categories</li>
+        <li><a href="#" onclick="filterByCategory('Books')">Books</a></li>
+        <li><a href="#" onclick="filterByCategory('Uniforms')">Uniforms</a></li>
+        <li><a href="#" onclick="filterByCategory('Merchandise')">Merchandise</a></li>
+        <li class="divider"></li>
+        {% if user %}
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        {% else %}
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+
+    <!-- Main Section -->
+    <main>
+      <!-- Flash Messages -->
+      {% if get_flashed_messages() %}
+        <div class="flash-messages">
+          {% for message in get_flashed_messages() %}
+            <div class="flash-message">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Listings Header Section -->
+      <div class="listings-header">
+        <h2>Browse Listings</h2>
+        <div class="filter-info" id="filterInfo"></div>
+        <button class="post-btn" onclick="clearForm(); openModal()">Post New Item</button>
+      </div>
+
+      <!-- Listings Section -->
+      <section class="listings" id="listings">
+        {% if error %}
+          <div class="error-message">{{ error }}</div>
+        {% endif %}
+        
+        {% if listings|length == 0 %}
+          <div class="no-listings">
+            <p>No listings found. Be the first to post an item!</p>
+            <button class="post-btn" onclick="clearForm(); openModal()">Post New Item</button>
+          </div>
+        {% endif %}
+        
+        <!-- Loop through listings from Supabase -->
+        {% for listing in listings %}
+          <div class="listing"
+               data-id="{{ listing.id }}"
+               data-title="{{ listing.title }}"
+               data-description="{{ listing.description }}"
+               data-price="{{ listing.price }}"
+               data-status="{{ listing.status }}"
+               data-contact="{{ listing.contact }}"
+               data-category="{{ listing.category }}"
+               data-gmail="{{ listing.gmail }}">
+            
+            <div class="listing-details">
+              <h3>{{ listing.title }}</h3>
+              <p class="price">PHP {{ "%.2f"|format(listing.price) }}</p>
+              <p class="description">{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
+              <p class="category">{{ listing.category }}</p>
+              <div class="listing-actions">
+                <button class="view-btn" onclick="viewListing({{ listing.id }})">View Details</button>
+                {% if user and (user.email == listing.gmail or session.get('user_type') == 'admin') %}
+                  <button class="edit-btn" onclick="editListing({{ listing.id }})">Edit</button>
+                  <button class="delete-btn" onclick="confirmDelete({{ listing.id }})">Delete</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Form for Create/Update -->
+  <div id="postModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle">Post a New Item</h2>
+      <form id="postForm" method="POST" action="{{ url_for('create_listing') }}">
+        <!-- Hidden field to store listing id when editing -->
+        <input type="hidden" id="listingId" name="listingId" value="">
+        
+        <div class="form-group">
+          <label for="title">Title:</label>
+          <input type="text" id="title" name="title" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description:</label>
+          <textarea id="description" name="description" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="price">Price (PHP):</label>
+          <input type="number" id="price" name="price" step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status:</label>
+          <select id="status" name="status">
+            <option value="Available">Available</option>
+            <option value="Sold">Sold</option>
+            <option value="Negotiating">Negotiating</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="contact">Contact Info:</label>
+          <input type="text" id="contact" name="contact" required>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category:</label>
+          <select id="category" name="category" required>
+            <option value="Books">Books</option>
+            <option value="Uniforms">Uniforms</option>
+            <option value="Merchandise">Merchandise</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" onclick="closeModal()">Cancel</button>
+          <button type="submit" id="submitBtn">Submit Listing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Listing Detail Modal -->
+  <div id="viewModal" class="modal">
+    <div class="modal-content listing-detail-modal">
+      <span class="close" onclick="closeViewModal()">&times;</span>
+      <h2 id="viewTitle"></h2>
+      <div class="listing-detail-content">
+        <div class="listing-image-large">
+          <div id="viewStatus" class="status-badge"></div>
+        </div>
+        <div class="listing-info">
+          <p class="price"><strong>Price:</strong> PHP <span id="viewPrice"></span></p>
+          <p><strong>Category:</strong> <span id="viewCategory"></span></p>
+          <p><strong>Description:</strong></p>
+          <div id="viewDescription" class="description-box"></div>
+          <p><strong>Contact:</strong> <span id="viewContact"></span></p>
+          <p><strong>Seller:</strong> <span id="viewGmail"></span></p>
+          
+          <div class="detail-actions">
+            {% if user %}
+              <button id="contactSellerBtn" class="contact-btn">Contact Seller</button>
+              <div id="editDeleteBtns" style="display: none;">
+                <button id="editFromDetailBtn" class="edit-btn">Edit Listing</button>
+                <button id="deleteFromDetailBtn" class="delete-btn">Delete Listing</button>
+              </div>
+            {% else %}
+              <p>Please <a href="{{ url_for('login') }}">login</a> to contact the seller.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content delete-modal">
+      <span class="close" onclick="closeDeleteModal()">&times;</span>
+      <h2>Confirm Deletion</h2>
+      <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
+      <form id="deleteForm" method="POST">
+        <div class="form-actions">
+          <button type="button" onclick="closeDeleteModal()">Cancel</button>
+          <button type="submit" class="delete-btn">Delete Listing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 JRU Marketplace. All rights reserved.</p>
+  </footer>
+
+  <!-- Include your JavaScript file -->
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    // Modal functionality
+    function openModal() {
+      document.getElementById('postModal').style.display = 'block';
+    }
+    
+    function closeModal() {
+      document.getElementById('postModal').style.display = 'none';
+    }
+    
+    function closeViewModal() {
+      document.getElementById('viewModal').style.display = 'none';
+    }
+    
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+    
+    // Filtering functionality
+    function showAllListings() {
+      document.querySelectorAll('.listing').forEach(listing => {
+        listing.style.display = 'flex';
+      });
+      updateListingsHeader('All Listings');
+    }
+    
+    function showMyListings() {
+      {% if user %}
+        const userEmail = "{{ user.email }}";
+        document.querySelectorAll('.listing').forEach(listing => {
+          if (listing.dataset.gmail === userEmail) {
+            listing.style.display = 'flex';
+          } else {
+            listing.style.display = 'none';
+          }
+        });
+        updateListingsHeader('My Listings');
+      {% else %}
+        alert('Please log in to view your listings');
+      {% endif %}
+    }
+    
+    function filterByCategory(category) {
+      document.querySelectorAll('.listing').forEach(listing => {
+        if (listing.dataset.category === category) {
+          listing.style.display = 'flex';
+        } else {
+          listing.style.display = 'none';
+        }
+      });
+      updateListingsHeader('Category: ' + category);
+    }
+    
+    function updateListingsHeader(title) {
+      const header = document.querySelector('.listings-header h2');
+      if (header) {
+        header.textContent = title;
+      }
+    }
+    
+    // Form handling
+    function clearForm() {
+      document.getElementById('modalTitle').textContent = 'Post a New Item';
+      document.getElementById('postForm').reset();
+      document.getElementById('listingId').value = '';
+      document.getElementById('postForm').action = "{{ url_for('create_listing') }}";
+      document.getElementById('submitBtn').textContent = 'Submit Listing';
+    }
+    
+    function editListing(listingId) {
+      const listing = document.querySelector(`.listing[data-id="${listingId}"]`);
+      
+      if (listing) {
+        document.getElementById('modalTitle').textContent = 'Edit Listing';
+        document.getElementById('listingId').value = listingId;
+        document.getElementById('title').value = listing.dataset.title;
+        document.getElementById('description').value = listing.dataset.description;
+        document.getElementById('price').value = listing.dataset.price;
+        document.getElementById('status').value = listing.dataset.status;
+        document.getElementById('contact').value = listing.dataset.contact;
+        document.getElementById('category').value = listing.dataset.category;
+        
+        // Properly create the edit URL with the listing ID
+        document.getElementById('postForm').action = `/listings/${listingId}/edit`;
+        document.getElementById('postForm').method = 'POST';
+        document.getElementById('submitBtn').textContent = 'Update Listing';
+        
+        openModal();
+      }
+    }
+    
+    function viewListing(listingId) {
+      const listing = document.querySelector(`.listing[data-id="${listingId}"]`);
+      
+      if (listing) {
+        document.getElementById('viewTitle').textContent = listing.dataset.title;
+        document.getElementById('viewPrice').textContent = parseFloat(listing.dataset.price).toFixed(2);
+        document.getElementById('viewDescription').textContent = listing.dataset.description;
+        document.getElementById('viewStatus').textContent = listing.dataset.status;
+        document.getElementById('viewStatus').className = 'status-badge ' + listing.dataset.status.toLowerCase();
+        document.getElementById('viewContact').textContent = listing.dataset.contact;
+        document.getElementById('viewCategory').textContent = listing.dataset.category;
+        document.getElementById('viewGmail').textContent = listing.dataset.gmail;
+        
+        
+        // Show edit/delete buttons if user is the owner or admin
+        {% if user %}
+          const isOwner = "{{ user.email }}" === listing.dataset.gmail;
+          const isAdmin = {{ 'true' if session.get('user_type') == 'admin' else 'false' }};
+          
+          document.getElementById('editDeleteBtns').style.display = (isOwner || isAdmin) ? 'block' : 'none';
+          
+          // Set up edit and delete buttons
+          document.getElementById('editFromDetailBtn').onclick = function() {
+            closeViewModal();
+            editListing(listingId);
+          };
+          
+          document.getElementById('deleteFromDetailBtn').onclick = function() {
+            closeViewModal();
+            confirmDelete(listingId);
+          };
+        {% endif %}
+        
+        document.getElementById('viewModal').style.display = 'block';
+      }
+    }
+    
+    function confirmDelete(listingId) {
+      document.getElementById('deleteForm').action = `/listings/${listingId}/delete`;
+      document.getElementById('deleteModal').style.display = 'block';
+    }
+    
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+      if (event.target === document.getElementById('postModal')) {
+        closeModal();
+      } else if (event.target === document.getElementById('viewModal')) {
+        closeViewModal();
+      } else if (event.target === document.getElementById('deleteModal')) {
+        closeDeleteModal();
+      }
+    }
+    
+    // Initialize page - show all listings by default
+    document.addEventListener('DOMContentLoaded', function() {
+      showAllListings();
+    });
+  </script>
+</body>
+</html>
