@@ -77,9 +77,7 @@ def authorize():
         session['user'] = user_info
         session.permanent = True
         
-        # Check if user exists and determine user type
         email = user_info.get('email')
-        # Simplify: set type, then single redirect
         session['user_type'] = 'admin' if email in ADMIN_EMAILS or email.endswith('@jru.edu') else 'user'
         return redirect(url_for('view_listings'))
             
