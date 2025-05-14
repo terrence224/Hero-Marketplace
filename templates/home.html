@@ -27,6 +27,7 @@
     nav a:hover { background: #edf2f7; color: #3498db; }
     nav a.active { background: #3498db; color: #fff; }
     .category-heading { font-weight: 600; margin-top: 1.2rem; color: #7f8c8d; padding-left: 0.8rem; }
+    .status-heading { font-weight: 600; margin-top: 1.2rem; color: #7f8c8d; padding-left: 0.8rem; }
     .divider { border-top: 1px solid #edf2f7; margin: 1rem 0; }
     main { flex: 1; }
 
@@ -181,8 +182,12 @@
       {% if user %}
       <div class="user-info">
         <img src="{{ user.picture }}" alt="Profile" class="profile-pic">
-        <span>Welcome, {{ user.name }}</span>
-      </div>
+        {% if session.user_type == 'admin' %}
+              <span>Welcome, Admin {{ user.name }}</span>
+            {% else %}
+              <span>Welcome, {{ user.name }}</span>
+            {% endif %}      
+        </div>
       {% endif %}
     </div>
   </header>
@@ -198,6 +203,10 @@
         <li><a href="#" onclick="filterByCategory('Books')">Books</a></li>
         <li><a href="#" onclick="filterByCategory('Uniforms')">Uniforms</a></li>
         <li><a href="#" onclick="filterByCategory('Merchandise')">Merchandise</a></li>
+        <li class="status-heading">Status</li>
+        <li><a href="#" onclick="filterByStatus('Available')">Available</a></li>
+        <li><a href="#" onclick="filterByStatus('Sold')">Sold</a></li>
+        <li><a href="#" onclick="filterByStatus('Negotiating')">Negotiating</a></li>
         <li class="divider"></li>
         {% if user %}<li><a href="{{ url_for('logout') }}">Logout</a></li>{% else %}<li><a href="{{ url_for('login') }}">Login</a></li>{% endif %}
       </ul>
@@ -235,7 +244,7 @@
         <div class="listing" data-id="{{ listing.id }}" data-title="{{ listing.title }}" data-description="{{ listing.description }}" data-price="{{ listing.price }}" data-status="{{ listing.status }}" data-contact="{{ listing.contact }}" data-category="{{ listing.category }}" data-gmail="{{ listing.gmail }}">
           <div class="listing-details">
             <h3>{{ listing.title }}</h3>
-            <p class="price">PHP {{ '%.2f'|format(listing.price) }}</p>
+            <p class="price">PHP {{ "{:,.2f}".format(listing.price) }}</p>
             
             <div class="listing-meta">
               <span class="category">{{ listing.category }}</span>
@@ -422,6 +431,17 @@
         }
       });
       updateListingsHeader('Category: ' + category);
+    }
+
+    function filterByStatus(status) {
+      document.querySelectorAll('.listing').forEach(listing => {
+        if (listing.dataset.status === status) {
+          listing.style.display = 'flex';
+        } else {
+          listing.style.display = 'none';
+        }
+      });
+      updateListingsHeader('Status: ' + status);
     }
     
     function updateListingsHeader(title) {

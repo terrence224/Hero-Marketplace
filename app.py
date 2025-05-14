@@ -52,12 +52,9 @@ def login_required(f):
 # Routes
 @app.route('/')
 def index():
+    # Redirect all logged-in users to the home view
     if 'user' in session:
-        user_type = session.get('user_type')
-        if user_type == 'admin':
-            return redirect(url_for('admin_dashboard'))
-        else:
-            return redirect(url_for('user_dashboard'))
+        return redirect(url_for('view_listings'))
     return redirect(url_for('login'))
 
 @app.route('/login')
@@ -82,13 +79,9 @@ def authorize():
         
         # Check if user exists and determine user type
         email = user_info.get('email')
-        
-        if email in ADMIN_EMAILS:
-            session['user_type'] = 'admin'
-            return redirect(url_for('view_listings'))
-        else:
-            session['user_type'] = 'user'
-            return redirect(url_for('view_listings'))
+        # Simplify: set type, then single redirect
+        session['user_type'] = 'admin' if email in ADMIN_EMAILS or email.endswith('@jru.edu') else 'user'
+        return redirect(url_for('view_listings'))
             
     except Exception as e:
         print(f"Error during authorization: {e}")
