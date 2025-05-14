@@ -32,11 +32,16 @@
     }
     .login-container h1 {
       font-size: 1.75rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
       color: #333;
     }
 
-    /* Google Sign-In button (now yellow) */
+    .login-container h2{
+      font-size: 0.75rem;
+      margin-bottom: 1.5rem;
+      color: #6e6e6e;
+    }
+
     .google-btn {
       display: inline-flex;
       align-items: center;
@@ -68,6 +73,7 @@
 <body>
   <div class="login-container">
     <h1>Login to<br>Hero Marketplace</h1>
+    <h2>(2 minutes loading for google login)</h2>
     <button class="google-btn" onclick="window.location='{{ url_for('login_with_google') }}'">
       <span class="google-icon" aria-hidden="true"></span>
       <span>Sign in with Google</span>
